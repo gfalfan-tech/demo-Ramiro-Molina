@@ -1,0 +1,110 @@
+<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>RPM Control — Alertas</title><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"><link rel="stylesheet" href="styles.css"></head>
+<body><div class="shell"><div id="sidebar-container"></div><div class="main">
+<div class="topbar"><div class="tb-title">Alertas</div><div style="display:flex;gap:10px;"><button class="btn-s" onclick="marcarTodasLeidas()">Marcar todas como leídas</button><button class="btn-p" onclick="abrirModal()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Nueva Alerta</button></div></div>
+<div class="content">
+  <div class="g2">
+    <div>
+      <div class="sec-title">Críticas</div><div id="list-crit"><div class="loading-center"><div class="spinner"></div></div></div>
+      <div class="sec-title mt20">Alta Prioridad</div><div id="list-alta"></div>
+    </div>
+    <div>
+      <div class="sec-title">Informativas</div><div id="list-info"></div>
+      <div class="card mt20"><div class="card-hd"><div class="ctitle">Resumen por Sistema</div></div><div id="resumen-sistemas"></div></div>
+    </div>
+  </div>
+</div></div></div>
+
+<div class="modal-ov" id="modal-alerta"><div class="modal-box" style="width:480px;"><div class="modal-hd"><div><div class="modal-title">Nueva Alerta</div></div><button class="modal-close" onclick="cerrarModal()">✕</button></div>
+<div class="modal-body">
+  <div class="fg"><label class="fl">Título *</label><input type="text" class="fi" id="fa-titulo" placeholder="Descripción de la alerta"></div>
+  <div class="frow">
+    <div class="fg"><label class="fl">Tipo</label><select class="fs" id="fa-tipo"><option value="critica">Crítica</option><option value="alta">Alta</option><option value="info">Informativa</option></select></div>
+    <div class="fg"><label class="fl">Cliente</label><select class="fs" id="fa-cliente"><option value="">General</option></select></div>
+  </div>
+  <div class="fg"><label class="fl">Descripción</label><textarea class="fta" id="fa-desc" placeholder="Detalles adicionales..."></textarea></div>
+</div>
+<div class="modal-ft"><button class="btn-s" onclick="cerrarModal()">Cancelar</button><button class="btn-p" onclick="guardarAlerta()">Crear Alerta</button></div>
+</div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script><script src="auth.js"></script><script src="sidebar.js"></script>
+<script>
+let ALERTAS = [];
+const user = requireAuth();
+if(user){ renderSidebar('alertas'); cargarBadges(); cargarAlertas(); }
+
+async function cargarAlertas(){
+  const db=getDB();
+  const {data}=await db.from('alertas').select('*,clientes(nombre)').order('creado_en',{ascending:false});
+  ALERTAS=data||[];
+  renderListas();
+}
+
+const ICONOS={
+  critica:'<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+  alta:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>',
+  info:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>'
+};
+const COLORES={critica:'var(--red)',alta:'var(--yellow)',info:'var(--blue)'};
+
+function renderItem(a){
+  return `<div class="ali ${a.tipo}" style="${a.leida?'opacity:.5':''}">
+    <div class="ali-ic ${a.tipo==='critica'&&!a.leida?'blink-r':''}" style="color:${COLORES[a.tipo]}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${ICONOS[a.tipo]||ICONOS.info}</svg></div>
+    <div class="ali-b">
+      <div class="ali-title">${a.titulo} ${a.origen==='automatica'?'<span class="badge b-info" style="font-size:9px;padding:2px 6px;">Auto</span>':''}</div>
+      <div class="ali-desc">${a.clientes?.nombre||''} ${a.descripcion?'· '+a.descripcion:''}</div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+      <div class="ali-time">${fmtFecha(a.creado_en)}</div>
+      ${!a.leida?`<button onclick="marcarLeida('${a.id}')" style="font-size:10px;color:var(--t3);background:none;border:none;cursor:pointer;">✓ Marcar leída</button>`:''}
+    </div>
+  </div>`;
+}
+
+function renderListas(){
+  const crits=ALERTAS.filter(a=>a.tipo==='critica');
+  const altas=ALERTAS.filter(a=>a.tipo==='alta');
+  const infos=ALERTAS.filter(a=>a.tipo==='info');
+  document.getElementById('list-crit').innerHTML=crits.length?crits.map(renderItem).join(''):'<div class="empty-state" style="height:80px;"><span style="color:var(--green);font-size:13px;">✓ Sin alertas críticas</span></div>';
+  document.getElementById('list-alta').innerHTML=altas.length?altas.map(renderItem).join(''):'<div style="color:var(--t3);font-size:13px;padding:12px 0;">Sin alertas de alta prioridad</div>';
+  document.getElementById('list-info').innerHTML=infos.length?infos.map(renderItem).join(''):'<div style="color:var(--t3);font-size:13px;padding:12px 0;">Sin alertas informativas</div>';
+  // Resumen por tipo
+  const tot=ALERTAS.length;
+  const cr=crits.length, al=altas.length;
+  document.getElementById('resumen-sistemas').innerHTML=`
+    <div class="pr"><span class="pr-lbl">Críticas</span><div class="pr-bg"><div class="pr-fill" style="width:${tot?cr/tot*100:0}%;background:linear-gradient(90deg,#E84040,#F97316);"></div></div><span class="pr-pct" style="color:var(--red);">${cr}</span></div>
+    <div class="pr"><span class="pr-lbl">Alta prioridad</span><div class="pr-bg"><div class="pr-fill" style="width:${tot?al/tot*100:0}%;background:linear-gradient(90deg,#F59E0B,#FBBF24);"></div></div><span class="pr-pct" style="color:var(--yellow);">${al}</span></div>
+    <div class="pr"><span class="pr-lbl">Informativas</span><div class="pr-bg"><div class="pr-fill" style="width:${tot?infos.length/tot*100:0}%;background:linear-gradient(90deg,#3B82F6,#60A5FA);"></div></div><span class="pr-pct" style="color:var(--blue);">${infos.length}</span></div>`;
+}
+
+async function marcarLeida(id){
+  await getDB().from('alertas').update({leida:true}).eq('id',id);
+  showToast('Alerta marcada como leída','ok'); cargarAlertas();
+}
+async function marcarTodasLeidas(){
+  await getDB().from('alertas').update({leida:true}).eq('leida',false);
+  showToast('Todas las alertas marcadas como leídas','ok'); cargarAlertas();
+}
+
+async function abrirModal(){
+  const {data:cls}=await getDB().from('clientes').select('id,nombre').eq('estado','Activo').order('nombre');
+  document.getElementById('fa-cliente').innerHTML='<option value="">General</option>'+(cls||[]).map(c=>`<option value="${c.id}">${c.nombre}</option>`).join('');
+  document.getElementById('fa-titulo').value='';document.getElementById('fa-desc').value='';
+  document.getElementById('modal-alerta').classList.add('open');
+}
+function cerrarModal(){document.getElementById('modal-alerta').classList.remove('open');}
+
+async function guardarAlerta(){
+  const titulo=document.getElementById('fa-titulo').value.trim();
+  if(!titulo){showToast('El título es obligatorio','error');return;}
+  const {error}=await getDB().from('alertas').insert({
+    titulo,tipo:document.getElementById('fa-tipo').value,
+    cliente_id:document.getElementById('fa-cliente').value||null,
+    descripcion:document.getElementById('fa-desc').value||null,
+    origen:'manual'
+  });
+  if(error){showToast('Error: '+error.message,'error');return;}
+  showToast('Alerta creada','ok');cerrarModal();cargarAlertas();
+}
+document.getElementById('modal-alerta').addEventListener('click',function(e){if(e.target===this)cerrarModal();});
+</script></body></html>

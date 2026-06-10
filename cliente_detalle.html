@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RPM Control — Detalle Cliente</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="shell">
+  <div id="sidebar-container"></div>
+  <div class="main">
+    <div class="topbar">
+      <div class="tb-title" id="tb-titulo">— Cliente</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <a href="clientes.html" class="tb-chip">← Volver</a>
+        <button class="btn-s" id="btn-editar" onclick="abrirModalCliente()" style="display:none">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Editar
+        </button>
+        <button class="btn-p" onclick="abrirModalOT()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nueva OT
+        </button>
+      </div>
+    </div>
+    <div class="content" id="main-content">
+      <div class="loading-center" style="height:60vh;"><div class="spinner"></div><span>Cargando cliente...</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EDITAR CLIENTE -->
+<div class="modal-ov" id="modal-cliente">
+  <div class="modal-box" style="width:680px;">
+    <div class="modal-hd">
+      <div><div class="modal-title">Editar Cliente</div><div class="modal-sub">Modifica la información del cliente</div></div>
+      <button class="modal-close" onclick="cerrarModalCliente()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="f-id">
+      <div class="fg"><label class="fl">Nombre / Razón Social *</label><input type="text" class="fi" id="f-nombre"></div>
+      <div class="frow">
+        <div class="fg"><label class="fl">RUT</label><input type="text" class="fi" id="f-rut"></div>
+        <div class="fg"><label class="fl">Tipo</label><select class="fs" id="f-tipo"><option>Corporativo</option><option>PyME</option><option>Gobierno</option><option>Residencial</option></select></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="fl">Teléfono</label><input type="text" class="fi" id="f-telefono"></div>
+        <div class="fg"><label class="fl">Email</label><input type="email" class="fi" id="f-email"></div>
+      </div>
+      <div class="fg"><label class="fl">Dirección</label><input type="text" class="fi" id="f-direccion"></div>
+      <div class="fg"><label class="fl">Industria</label><input type="text" class="fi" id="f-industria"></div>
+      <div class="frow">
+        <div class="fg"><label class="fl">Responsable Comercial</label><input type="text" class="fi" id="f-responsable"></div>
+        <div class="fg"><label class="fl">Condición de Pago</label><select class="fs" id="f-condicion"><option>30 días</option><option>60 días</option><option>Contado</option><option>Crédito especial</option></select></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="fl">Contrato Inicio</label><input type="date" class="fi" id="f-contrato-ini"></div>
+        <div class="fg"><label class="fl">Contrato Fin</label><input type="date" class="fi" id="f-contrato-fin"></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="fl">Contrato Estado</label><select class="fs" id="f-contrato-estado"><option>Vigente</option><option>Vencido</option><option>En negociación</option><option>Sin contrato</option></select></div>
+        <div class="fg"><label class="fl">Estado Cliente</label><select class="fs" id="f-estado"><option>Activo</option><option>Inactivo</option></select></div>
+      </div>
+      <div class="fg"><label class="fl">Notas</label><textarea class="fta" id="f-notas"></textarea></div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn-s" onclick="cerrarModalCliente()">Cancelar</button>
+      <button class="btn-p" onclick="guardarCliente()" id="btn-guardar-cliente">Guardar Cambios</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONTACTO -->
+<div class="modal-ov" id="modal-contacto">
+  <div class="modal-box" style="width:480px;">
+    <div class="modal-hd">
+      <div><div class="modal-title" id="modal-contacto-titulo">Nuevo Contacto</div></div>
+      <button class="modal-close" onclick="cerrarModalContacto()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="fc-id">
+      <div class="fg"><label class="fl">Nombre *</label><input type="text" class="fi" id="fc-nombre" placeholder="Juan Pérez"></div>
+      <div class="fg"><label class="fl">Cargo</label><input type="text" class="fi" id="fc-cargo" placeholder="Jefe de Mantención"></div>
+      <div class="frow">
+        <div class="fg"><label class="fl">Teléfono</label><input type="text" class="fi" id="fc-telefono" placeholder="+56 9 1234 5678"></div>
+        <div class="fg"><label class="fl">Email</label><input type="email" class="fi" id="fc-email" placeholder="juan@empresa.cl"></div>
+      </div>
+      <div class="fg">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+          <input type="checkbox" id="fc-principal" style="accent-color:var(--red);">
+          <span style="font-size:13px;color:var(--t2);">Contacto principal</span>
+        </label>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn-s" onclick="cerrarModalContacto()">Cancelar</button>
+      <button class="btn-p" onclick="guardarContacto()" id="btn-guardar-contacto">Guardar Contacto</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL SISTEMA -->
+<div class="modal-ov" id="modal-sistema">
+  <div class="modal-box" style="width:480px;">
+    <div class="modal-hd">
+      <div><div class="modal-title" id="modal-sistema-titulo">Nuevo Sistema</div></div>
+      <button class="modal-close" onclick="cerrarModalSistema()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="fs-id">
+      <div class="fg"><label class="fl">Nombre del Sistema *</label>
+        <input type="text" class="fi" id="fs-nombre" placeholder="Ej: Detección de Incendios">
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="fl">Cantidad</label><input type="number" class="fi" id="fs-cantidad" value="1" min="1"></div>
+        <div class="fg"><label class="fl">Unidad</label>
+          <select class="fs" id="fs-unidad"><option>equipos</option><option>zonas</option><option>bombas</option><option>sistemas</option><option>cámaras</option><option>puertas</option><option>puntos</option></select>
+        </div>
+      </div>
+      <div class="fg"><label class="fl">Estado</label>
+        <select class="fs" id="fs-estado"><option>Activo</option><option>En mantenimiento</option><option>Inactivo</option></select>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn-s" onclick="cerrarModalSistema()">Cancelar</button>
+      <button class="btn-p" onclick="guardarSistema()" id="btn-guardar-sistema">Guardar Sistema</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NUEVA OT -->
+<div class="modal-ov" id="modal-ot">
+  <div class="modal-box" style="width:560px;">
+    <div class="modal-hd">
+      <div><div class="modal-title">Nueva Orden de Trabajo</div><div class="modal-sub" id="ot-cliente-sub">—</div></div>
+      <button class="modal-close" onclick="cerrarModalOT()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="frow">
+        <div class="fg"><label class="fl">Tipo</label>
+          <select class="fs" id="fot-tipo"><option>Preventiva</option><option>Correctiva</option><option>Inspección</option><option>Certificación</option></select>
+        </div>
+        <div class="fg"><label class="fl">Prioridad</label>
+          <select class="fs" id="fot-prioridad"><option>Normal</option><option>Alta</option><option>Crítica</option></select>
+        </div>
+      </div>
+      <div class="fg"><label class="fl">Nombre / Descripción *</label><input type="text" class="fi" id="fot-nombre" placeholder="Ej: Mantención Detección de Incendios"></div>
+      <div class="fg"><label class="fl">Técnico Asignado</label>
+        <select class="fs" id="fot-tecnico"><option value="">Sin asignar</option></select>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="fl">Fecha Programada</label><input type="date" class="fi" id="fot-fecha"></div>
+        <div class="fg"><label class="fl">Estado</label>
+          <select class="fs" id="fot-estado"><option>Abierta</option><option>En Progreso</option></select>
+        </div>
+      </div>
+      <div class="fg"><label class="fl">Descripción adicional</label><textarea class="fta" id="fot-desc" placeholder="Detalles del trabajo..."></textarea></div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn-s" onclick="cerrarModalOT()">Cancelar</button>
+      <button class="btn-p" onclick="guardarOT()" id="btn-guardar-ot">Crear OT</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="auth.js"></script>
+<script src="sidebar.js"></script>
+<script>
+  let CLIENTE_ID = null;
+  let CLIENTE_DATA = null;
+
+  const user = requireAuth();
+  if (user) {
+    renderSidebar('clientes');
+    cargarBadges();
+    const params = new URLSearchParams(window.location.search);
+    CLIENTE_ID = params.get('id');
+    if (!CLIENTE_ID) { window.location.href = 'clientes.html'; }
+    else {
+      if (user.rol === 'admin' || user.rol === 'supervisor') {
+        document.getElementById('btn-editar').style.display = 'inline-flex';
+      }
+      cargarDetalle();
+    }
+  }
+
+  async function cargarDetalle() {
+    const db = getDB();
+    const [{ data: c }, { data: contactos }, { data: sistemas }, { data: docs }, { data: ots }, { data: activos }] = await Promise.all([
+      db.from('clientes').select('*').eq('id', CLIENTE_ID).single(),
+      db.from('contactos').select('*').eq('cliente_id', CLIENTE_ID).order('es_principal', { ascending: false }),
+      db.from('sistemas').select('*').eq('cliente_id', CLIENTE_ID).order('nombre'),
+      db.from('documentos').select('*').eq('cliente_id', CLIENTE_ID).order('creado_en', { ascending: false }),
+      db.from('ots').select('*, tecnicos(perfil_id, perfiles(nombre))').eq('cliente_id', CLIENTE_ID).order('creado_en', { ascending: false }).limit(5),
+      db.from('activos').select('*').eq('cliente_id', CLIENTE_ID).gte('proximo_mantenimiento', new Date().toISOString().split('T')[0]).order('proximo_mantenimiento').limit(4)
+    ]);
+
+    if (!c) { window.location.href = 'clientes.html'; return; }
+    CLIENTE_DATA = c;
+    document.getElementById('tb-titulo').textContent = c.nombre;
+    renderDetalle(c, contactos||[], sistemas||[], docs||[], ots||[], activos||[]);
+  }
+
+  function renderDetalle(c, contactos, sistemas, docs, ots, activos) {
+    const ini = c.nombre.split(' ').map(x=>x[0]).join('').substring(0,2).toUpperCase();
+    const meses = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
+
+    const html = `
+      <!-- HEADER CLIENTE -->
+      <div class="detail-header fu">
+        <div class="detail-foto">${c.foto_url ? `<img src="${c.foto_url}" style="width:100%;height:100%;object-fit:cover;border-radius:var(--r);">` : `<span style="font-family:var(--fd);font-size:28px;font-weight:800;">${ini}</span>`}</div>
+        <div class="detail-info">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+            <div class="detail-name">${c.nombre}</div>
+            ${badgeEstado(c.estado)}
+            ${badgeEstado(c.contrato_estado || 'Sin contrato')}
+          </div>
+          <div class="detail-row">
+            <div class="detail-field"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${c.direccion||'Sin dirección'}</div>
+            <div class="detail-field"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13.5 19.79 19.79 0 0 1 1.61 4.87 2 2 0 0 1 3.59 2.68h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 10a16 16 0 0 0 6 6l.92-.92a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.5 17.5z"/></svg>${c.telefono||'—'}</div>
+            <div class="detail-field"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>${c.email||'—'}</div>
+            <div class="detail-field"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>${c.industria||'—'}</div>
+            ${c.contrato_inicio ? `<div class="detail-field"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Contrato: ${fmtFecha(c.contrato_inicio)} al ${fmtFecha(c.contrato_fin)}</div>` : ''}
+          </div>
+        </div>
+        <div style="flex-shrink:0;min-width:280px;">
+          <div style="background:var(--s2);border:1px solid var(--bd);border-radius:var(--r);padding:16px;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px;align-items:center;">
+              <span style="font-size:12px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.6px;">Información General</span>
+              ${(user.rol==='admin'||user.rol==='supervisor') ? `<button class="icon-btn" onclick="abrirModalCliente()" title="Editar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>` : ''}
+            </div>
+            ${[
+              ['RUT', c.rut],['Tipo', c.tipo_cliente],['Responsable', c.responsable_comercial],
+              ['Cond. Pago', c.condicion_pago],['Crédito', c.credito_dias ? c.credito_dias + ' días' : null],
+              ['Fecha Alta', fmtFecha(c.fecha_alta)]
+            ].map(([l,v]) => v ? `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bd);font-size:12.5px;"><span style="color:var(--t3);">${l}</span><span style="color:var(--t1);font-weight:500;">${v}</span></div>` : '').join('')}
+          </div>
+        </div>
+      </div>
+
+      <!-- GRID PRINCIPAL -->
+      <div class="g-detail">
+        <div>
+          <!-- CONTACTOS -->
+          <div class="card fu mb16">
+            <div class="card-hd">
+              <div class="ctitle">Contactos</div>
+              ${(user.rol==='admin'||user.rol==='supervisor') ? `<button class="btn-s" onclick="abrirModalContacto()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Nuevo Contacto</button>` : ''}
+            </div>
+            ${contactos.length ? contactos.map(ct => {
+              const ini2 = ct.nombre.split(' ').map(x=>x[0]).join('').substring(0,2).toUpperCase();
+              return `
+                <div class="contact-card">
+                  <div class="contact-av">${ini2}</div>
+                  <div class="contact-info">
+                    <div class="contact-name">${ct.nombre} ${ct.es_principal ? `<span class="badge b-info" style="font-size:10px;padding:2px 7px;margin-left:6px;">Principal</span>` : ''}</div>
+                    <div class="contact-cargo">${ct.cargo||''}</div>
+                    <div style="font-size:12px;color:var(--t3);margin-top:4px;">${ct.telefono||''} ${ct.email ? `· ${ct.email}` : ''}</div>
+                  </div>
+                  ${(user.rol==='admin'||user.rol==='supervisor') ? `
+                  <div class="contact-actions">
+                    <button class="icon-btn" onclick="editarContacto('${ct.id}','${ct.nombre.replace(/'/g,"\\'")}','${ct.cargo||''}','${ct.telefono||''}','${ct.email||''}',${ct.es_principal})">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </button>
+                    <button class="icon-btn" onclick="eliminarContacto('${ct.id}')" style="color:var(--red)">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                    </button>
+                  </div>` : ''}
+                </div>`;
+            }).join('') : `<div class="empty-state" style="height:80px;"><span style="font-size:13px;color:var(--t3);">Sin contactos registrados</span></div>`}
+          </div>
+
+          <!-- SISTEMAS INSTALADOS -->
+          <div class="card fu mb16">
+            <div class="card-hd">
+              <div class="ctitle">Sistemas Instalados</div>
+              ${(user.rol==='admin'||user.rol==='supervisor') ? `<button class="btn-s" onclick="abrirModalSistema()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Agregar</button>` : ''}
+            </div>
+            ${sistemas.length ? sistemas.map(s => `
+              <div class="sistema-item">
+                <div class="sistema-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+                <div class="sistema-info">
+                  <div class="sistema-nombre">${s.nombre}</div>
+                  <div class="sistema-cant">(${s.cantidad} ${s.unidad})</div>
+                </div>
+                ${badgeEstado(s.estado)}
+                ${(user.rol==='admin'||user.rol==='supervisor') ? `
+                <button class="icon-btn" onclick="eliminarSistema('${s.id}')" style="color:var(--red)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                </button>` : ''}
+              </div>`).join('') : `<div class="empty-state" style="height:80px;"><span style="font-size:13px;color:var(--t3);">Sin sistemas registrados</span></div>`}
+          </div>
+
+          <!-- DOCUMENTOS -->
+          <div class="card fu mb16">
+            <div class="card-hd">
+              <div class="ctitle">Documentos del Cliente</div>
+              ${(user.rol==='admin'||user.rol==='supervisor') ? `<button class="btn-s" onclick="subirDocumento()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Subir</button>` : ''}
+            </div>
+            <input type="file" id="file-input" style="display:none" onchange="procesarArchivo(this)">
+            ${docs.length ? docs.map(d => {
+              const ext = (d.nombre.split('.').pop()||'').toUpperCase();
+              const claseDoc = ext==='PDF'?'doc-pdf':ext==='XLSX'||ext==='XLS'?'doc-xlsx':'doc-zip';
+              return `
+                <div class="doc-item">
+                  <div class="doc-ic ${claseDoc}">${ext}</div>
+                  <div class="doc-info">
+                    <div class="doc-name">${d.nombre}</div>
+                    <div class="doc-date">${fmtFecha(d.creado_en)}</div>
+                  </div>
+                  ${d.url ? `<a href="${d.url}" target="_blank" class="icon-btn" title="Descargar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></a>` : ''}
+                  ${(user.rol==='admin') ? `<button class="icon-btn" onclick="eliminarDoc('${d.id}')" style="color:var(--red)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>` : ''}
+                </div>`;
+            }).join('') : `<div class="empty-state" style="height:80px;"><span style="font-size:13px;color:var(--t3);">Sin documentos</span></div>`}
+          </div>
+
+          <!-- NOTAS -->
+          <div class="card fu">
+            <div class="card-hd">
+              <div class="ctitle">Notas y Observaciones</div>
+              ${(user.rol==='admin'||user.rol==='supervisor') ? `<button class="icon-btn" onclick="editarNotas()" title="Editar notas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>` : ''}
+            </div>
+            <div id="notas-content" style="font-size:13.5px;color:var(--t2);line-height:1.7;">${CLIENTE_DATA.notas || '<span style="color:var(--t3);">Sin observaciones registradas</span>'}</div>
+          </div>
+        </div>
+
+        <!-- COLUMNA DERECHA -->
+        <div>
+          <!-- PRÓXIMAS MANTENCIONES -->
+          <div class="card fu mb16">
+            <div class="card-hd">
+              <div class="ctitle">Próximas Mantenciones</div>
+              <a href="activos.html?cliente=${CLIENTE_ID}" class="tb-chip" style="font-size:10px;">Ver calendario</a>
+            </div>
+            ${activos.length ? activos.map(a => {
+              const d = new Date(a.proximo_mantenimiento + 'T00:00:00');
+              return `
+                <div class="mant-item">
+                  <div class="mant-fecha">
+                    <div class="mant-day">${d.getDate()}</div>
+                    <div class="mant-mon">${meses[d.getMonth()]}</div>
+                  </div>
+                  <div class="mant-info">
+                    <div class="mant-nombre">${a.nombre}</div>
+                  </div>
+                  <span class="badge b-prog">Programada</span>
+                </div>`;
+            }).join('') : `<div class="empty-state" style="height:80px;"><span style="font-size:13px;color:var(--t3);">Sin mantenciones programadas</span></div>`}
+          </div>
+
+          <!-- HISTORIAL OTs -->
+          <div class="card fu">
+            <div class="card-hd">
+              <div class="ctitle">Historial de Servicios</div>
+              <a href="ots.html?cliente=${CLIENTE_ID}" class="tb-chip" style="font-size:10px;">Ver todos</a>
+            </div>
+            ${ots.length ? ots.map(o => `
+              <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--bd);">
+                <span style="color:var(--green);flex-shrink:0;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><polyline points="20 6 9 17 4 12"/></svg></span>
+                <div style="flex:1;">
+                  <div style="font-size:13px;font-weight:600;color:var(--t1);">${o.numero||'—'}</div>
+                  <div style="font-size:11.5px;color:var(--t3);">${o.nombre}</div>
+                </div>
+                <div style="font-size:11px;color:var(--t3);">${fmtFecha(o.creado_en)}</div>
+              </div>`).join('') : `<div class="empty-state" style="height:80px;"><span style="font-size:13px;color:var(--t3);">Sin historial</span></div>`}
+          </div>
+        </div>
+      </div>`;
+
+    document.getElementById('main-content').innerHTML = html;
+  }
+
+  // ── Funciones de modales ──
+  function abrirModalCliente() {
+    const c = CLIENTE_DATA;
+    document.getElementById('f-id').value = c.id;
+    document.getElementById('f-nombre').value = c.nombre || '';
+    document.getElementById('f-rut').value = c.rut || '';
+    document.getElementById('f-tipo').value = c.tipo_cliente || 'Corporativo';
+    document.getElementById('f-telefono').value = c.telefono || '';
+    document.getElementById('f-email').value = c.email || '';
+    document.getElementById('f-direccion').value = c.direccion || '';
+    document.getElementById('f-industria').value = c.industria || '';
+    document.getElementById('f-responsable').value = c.responsable_comercial || '';
+    document.getElementById('f-condicion').value = c.condicion_pago || '30 días';
+    document.getElementById('f-contrato-ini').value = c.contrato_inicio || '';
+    document.getElementById('f-contrato-fin').value = c.contrato_fin || '';
+    document.getElementById('f-contrato-estado').value = c.contrato_estado || 'Vigente';
+    document.getElementById('f-estado').value = c.estado || 'Activo';
+    document.getElementById('f-notas').value = c.notas || '';
+    document.getElementById('modal-cliente').classList.add('open');
+  }
+  function cerrarModalCliente() { document.getElementById('modal-cliente').classList.remove('open'); }
+
+  async function guardarCliente() {
+    const nombre = document.getElementById('f-nombre').value.trim();
+    if (!nombre) { showToast('El nombre es obligatorio', 'error'); return; }
+    const db = getDB();
+    const { error } = await db.from('clientes').update({
+      nombre, rut: document.getElementById('f-rut').value||null,
+      tipo_cliente: document.getElementById('f-tipo').value,
+      telefono: document.getElementById('f-telefono').value||null,
+      email: document.getElementById('f-email').value||null,
+      direccion: document.getElementById('f-direccion').value||null,
+      industria: document.getElementById('f-industria').value||null,
+      responsable_comercial: document.getElementById('f-responsable').value||null,
+      condicion_pago: document.getElementById('f-condicion').value,
+      contrato_inicio: document.getElementById('f-contrato-ini').value||null,
+      contrato_fin: document.getElementById('f-contrato-fin').value||null,
+      contrato_estado: document.getElementById('f-contrato-estado').value,
+      estado: document.getElementById('f-estado').value,
+      notas: document.getElementById('f-notas').value||null,
+      actualizado_en: new Date().toISOString()
+    }).eq('id', CLIENTE_ID);
+    if (error) { showToast('Error: ' + error.message, 'error'); return; }
+    showToast('Cliente actualizado', 'ok');
+    cerrarModalCliente();
+    cargarDetalle();
+  }
+
+  function abrirModalContacto(ct = null) {
+    document.getElementById('fc-id').value = ct?.id || '';
+    document.getElementById('fc-nombre').value = ct?.nombre || '';
+    document.getElementById('fc-cargo').value = ct?.cargo || '';
+    document.getElementById('fc-telefono').value = ct?.telefono || '';
+    document.getElementById('fc-email').value = ct?.email || '';
+    document.getElementById('fc-principal').checked = ct?.es_principal || false;
+    document.getElementById('modal-contacto-titulo').textContent = ct ? 'Editar Contacto' : 'Nuevo Contacto';
+    document.getElementById('modal-contacto').classList.add('open');
+  }
+  function cerrarModalContacto() { document.getElementById('modal-contacto').classList.remove('open'); }
+  function editarContacto(id, nombre, cargo, telefono, email, ppal) {
+    abrirModalContacto({ id, nombre, cargo, telefono, email, es_principal: ppal });
+  }
+
+  async function guardarContacto() {
+    const nombre = document.getElementById('fc-nombre').value.trim();
+    if (!nombre) { showToast('El nombre es obligatorio', 'error'); return; }
+    const db = getDB();
+    const id = document.getElementById('fc-id').value;
+    const payload = {
+      cliente_id: CLIENTE_ID,
+      nombre, cargo: document.getElementById('fc-cargo').value||null,
+      telefono: document.getElementById('fc-telefono').value||null,
+      email: document.getElementById('fc-email').value||null,
+      es_principal: document.getElementById('fc-principal').checked
+    };
+    const { error } = id ? await db.from('contactos').update(payload).eq('id', id) : await db.from('contactos').insert(payload);
+    if (error) { showToast('Error: ' + error.message, 'error'); return; }
+    showToast('Contacto guardado', 'ok');
+    cerrarModalContacto();
+    cargarDetalle();
+  }
+
+  async function eliminarContacto(id) {
+    if (!confirm('¿Eliminar este contacto?')) return;
+    const db = getDB();
+    await db.from('contactos').delete().eq('id', id);
+    showToast('Contacto eliminado', 'ok');
+    cargarDetalle();
+  }
+
+  function abrirModalSistema() {
+    document.getElementById('fs-id').value = '';
+    document.getElementById('fs-nombre').value = '';
+    document.getElementById('fs-cantidad').value = 1;
+    document.getElementById('fs-unidad').value = 'equipos';
+    document.getElementById('fs-estado').value = 'Activo';
+    document.getElementById('modal-sistema').classList.add('open');
+  }
+  function cerrarModalSistema() { document.getElementById('modal-sistema').classList.remove('open'); }
+
+  async function guardarSistema() {
+    const nombre = document.getElementById('fs-nombre').value.trim();
+    if (!nombre) { showToast('El nombre es obligatorio', 'error'); return; }
+    const db = getDB();
+    const { error } = await db.from('sistemas').insert({
+      cliente_id: CLIENTE_ID,
+      nombre, cantidad: parseInt(document.getElementById('fs-cantidad').value)||1,
+      unidad: document.getElementById('fs-unidad').value,
+      estado: document.getElementById('fs-estado').value
+    });
+    if (error) { showToast('Error: ' + error.message, 'error'); return; }
+    showToast('Sistema agregado', 'ok');
+    cerrarModalSistema();
+    cargarDetalle();
+  }
+
+  async function eliminarSistema(id) {
+    if (!confirm('¿Eliminar este sistema?')) return;
+    const db = getDB();
+    await db.from('sistemas').delete().eq('id', id);
+    showToast('Sistema eliminado', 'ok');
+    cargarDetalle();
+  }
+
+  function subirDocumento() { document.getElementById('file-input').click(); }
+
+  async function procesarArchivo(input) {
+    const file = input.files[0];
+    if (!file) return;
+    showToast('Subiendo archivo...', 'info');
+    const db = getDB();
+    const path = `${CLIENTE_ID}/${Date.now()}_${file.name}`;
+    const { error: upErr } = await db.storage.from('documentos-rpm').upload(path, file);
+    if (upErr) { showToast('Error subiendo: ' + upErr.message, 'error'); return; }
+    const { data: urlData } = db.storage.from('documentos-rpm').getPublicUrl(path);
+    await db.from('documentos').insert({
+      cliente_id: CLIENTE_ID, nombre: file.name,
+      tipo: file.name.split('.').pop().toUpperCase(),
+      url: urlData.publicUrl, storage_path: path
+    });
+    showToast('Documento subido', 'ok');
+    input.value = '';
+    cargarDetalle();
+  }
+
+  async function eliminarDoc(id) {
+    if (!confirm('¿Eliminar este documento?')) return;
+    const db = getDB();
+    await db.from('documentos').delete().eq('id', id);
+    showToast('Documento eliminado', 'ok');
+    cargarDetalle();
+  }
+
+  async function editarNotas() {
+    const nuevas = prompt('Notas:', CLIENTE_DATA.notas || '');
+    if (nuevas === null) return;
+    const db = getDB();
+    await db.from('clientes').update({ notas: nuevas }).eq('id', CLIENTE_ID);
+    showToast('Notas actualizadas', 'ok');
+    cargarDetalle();
+  }
+
+  // Modal OT
+  async function abrirModalOT() {
+    document.getElementById('ot-cliente-sub').textContent = CLIENTE_DATA?.nombre || '';
+    document.getElementById('fot-nombre').value = '';
+    document.getElementById('fot-tipo').value = 'Preventiva';
+    document.getElementById('fot-prioridad').value = 'Normal';
+    document.getElementById('fot-fecha').value = new Date().toISOString().split('T')[0];
+    document.getElementById('fot-desc').value = '';
+    document.getElementById('fot-estado').value = 'Abierta';
+    // Cargar técnicos
+    const db = getDB();
+    const { data: tecs } = await db.from('tecnicos').select('id, perfiles(nombre)').eq('disponible', true);
+    const sel = document.getElementById('fot-tecnico');
+    sel.innerHTML = '<option value="">Sin asignar</option>' + (tecs||[]).map(t => `<option value="${t.id}">${t.perfiles?.nombre||'—'}</option>`).join('');
+    document.getElementById('modal-ot').classList.add('open');
+  }
+  function cerrarModalOT() { document.getElementById('modal-ot').classList.remove('open'); }
+
+  async function guardarOT() {
+    const nombre = document.getElementById('fot-nombre').value.trim();
+    if (!nombre) { showToast('El nombre es obligatorio', 'error'); return; }
+    const db = getDB();
+    const { error } = await db.from('ots').insert({
+      cliente_id: CLIENTE_ID,
+      nombre, tipo: document.getElementById('fot-tipo').value,
+      prioridad: document.getElementById('fot-prioridad').value,
+      estado: document.getElementById('fot-estado').value,
+      tecnico_id: document.getElementById('fot-tecnico').value || null,
+      fecha_programada: document.getElementById('fot-fecha').value || null,
+      descripcion: document.getElementById('fot-desc').value || null,
+      creado_por: user.id
+    });
+    if (error) { showToast('Error: ' + error.message, 'error'); return; }
+    showToast('OT creada correctamente', 'ok');
+    cerrarModalOT();
+    cargarDetalle();
+  }
+
+  // Cerrar modales al click fuera
+  ['modal-cliente','modal-contacto','modal-sistema','modal-ot'].forEach(id => {
+    document.getElementById(id).addEventListener('click', function(e) { if (e.target === this) this.classList.remove('open'); });
+  });
+</script>
+</body>
+</html>

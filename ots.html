@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RPM Control — Órdenes de Trabajo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="shell">
+  <div id="sidebar-container"></div>
+  <div class="main">
+    <div class="topbar">
+      <div class="tb-title">Órdenes de Trabajo</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <select id="filtro-estado" class="tb-chip" style="cursor:pointer;border:1px solid var(--bd2);">
+          <option value="">Todos los estados</option>
+          <option value="Abierta">Abierta</option>
+          <option value="En Progreso">En Progreso</option>
+          <option value="Completada">Completada</option>
+          <option value="Cancelada">Cancelada</option>
+        </select>
+        <select id="filtro-prioridad" class="tb-chip" style="cursor:pointer;border:1px solid var(--bd2);">
+          <option value="">Todas las prioridades</option>
+          <option value="Crítica">Crítica</option>
+          <option value="Alta">Alta</option>
+          <option value="Normal">Normal</option>
+        </select>
+        <button class="btn-p" onclick="abrirModal()" id="btn-nueva-ot">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nueva OT
+        </button>
+      </div>
+    </div>
+    <div class="content">
+      <div class="card">
+        <div class="card-hd">
+          <div><div class="ctitle">Todas las Órdenes de Trabajo</div><div class="csub" id="ots-sub">—</div></div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="tbl">
+            <thead><tr><th>Número</th><th>Nombre / Descripción</th><th>Cliente</th><th>Técnico</th><th>Tipo</th><th>Prioridad</th><th>Estado</th><th>Fecha</th><th>Costo Total</th><th></th></tr></thead>
+            <tbody id="ots-tbody"><tr><td colspan="10"><div class="loading-center"><div class="spinner"></div><span>Cargando...</span></div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL OT -->
+<div class="modal-ov" id="modal-ot">
+  <div class="modal-box" style="width:680px;">
+    <div class="modal-hd">
+      <div><div class="modal-title" id="modal-ot-titulo">Nueva Orden de Trabajo</div></div>
+      <button class="modal-close" onclick="cerrarModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="f-id">
+      <div class="frow">
+        <div class="fg"><label class="fl">Cliente</label><select class="fs" id="f-cliente"><option value="">Seleccionar...</option></select></div>
+        <div class="fg"><label class="fl">Tipo</label><select class="fs" id="f-tipo"><option>Preventiva</option><option>Correctiva</option><option>Inspección</option><option>Certificación</option></select></div>
+      </div>
+      <div class="fg"><label class="fl">Nombre / Descripción *</label><input type="text" class="fi" id="f-nombre" placeholder="Ej: Mantención Sistema Sprinkler"></div>
+      <div class="frow">
+        <div class="fg"><label class="fl">Técnico</label><select class="fs" id="f-tecnico"><option value="">Sin asignar</option></select></div>
+        <div class="fg"><label class="fl">Prioridad</label><select class="fs" id="f-prioridad"><option>Normal</option><option>Alta</option><option>Crítica</option></select></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="fl">Estado</label><select class="fs" id="f-estado"><option>Abierta</option><option>En Progreso</option><option>Completada</option><option>Cancelada</option></select></div>
+        <div class="fg"><label class="fl">Fecha Programada</label><input type="date" class="fi" id="f-fecha"></div>
+      </div>
+      <div class="fg"><label class="fl">Descripción adicional</label><textarea class="fta" id="f-desc" placeholder="Detalles del trabajo..."></textarea></div>
+      <div class="frow3">
+        <div class="fg"><label class="fl">Costo Mano de Obra</label><input type="number" class="fi" id="f-cmo" value="0" min="0"></div>
+        <div class="fg"><label class="fl">Costo Repuestos</label><input type="number" class="fi" id="f-crep" value="0" min="0"></div>
+        <div class="fg"><label class="fl">Otros Costos</label><input type="number" class="fi" id="f-cotros" value="0" min="0"></div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn-s" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn-p" onclick="guardarOT()" id="btn-guardar">Guardar OT</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script><script src="auth.js"></script><script src="sidebar.js"></script>
+<script>
+  let OTS = [], CLIENTES_LIST = [], TECNICOS_LIST = [];
+  const user = requireAuth();
+  if (user) {
+    renderSidebar('ots'); cargarBadges();
+    // Técnico solo ve sus propias
+    cargarDatos();
+  }
+  document.getElementById('filtro-estado').addEventListener('change', filtrar);
+  document.getElementById('filtro-prioridad').addEventListener('change', filtrar);
+
+  async function cargarDatos() {
+    const db = getDB();
+    let q = db.from('ots').select('*, clientes(nombre), tecnicos(id, perfiles(nombre))').order('creado_en',{ascending:false});
+    if (user.rol === 'tecnico') {
+      const { data: tec } = await db.from('tecnicos').select('id').eq('perfil_id', user.id).single();
+      if (tec) q = q.eq('tecnico_id', tec.id);
+    }
+    const { data } = await q;
+    OTS = data || [];
+    document.getElementById('ots-sub').textContent = `${OTS.length} órdenes registradas`;
+    renderTabla(OTS);
+    // Cargar selectores
+    const { data: cls } = await db.from('clientes').select('id,nombre').eq('estado','Activo').order('nombre');
+    CLIENTES_LIST = cls || [];
+    const { data: tecs } = await db.from('tecnicos').select('id, perfiles(nombre)');
+    TECNICOS_LIST = tecs || [];
+  }
+
+  function filtrar() {
+    const est = document.getElementById('filtro-estado').value;
+    const pri = document.getElementById('filtro-prioridad').value;
+    const f = OTS.filter(o => (!est || o.estado===est) && (!pri || o.prioridad===pri));
+    renderTabla(f);
+  }
+
+  function renderTabla(lista) {
+    const tb = document.getElementById('ots-tbody');
+    if (!lista.length) { tb.innerHTML = `<tr><td colspan="10"><div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/></svg><span>Sin órdenes</span></div></td></tr>`; return; }
+    tb.innerHTML = lista.map(o => {
+      const total = (o.costo_mano_obra||0)+(o.costo_repuestos||0)+(o.costo_otros||0);
+      return `<tr>
+        <td><span style="font-family:var(--fd);font-size:13px;color:var(--red);">${o.numero||'—'}</span></td>
+        <td><div style="font-weight:600;color:var(--t1);">${o.nombre}</div><div style="font-size:11px;color:var(--t3);">${o.clientes?.nombre||'—'}</div></td>
+        <td style="font-size:12.5px;">${o.clientes?.nombre||'—'}</td>
+        <td style="font-size:12.5px;">${o.tecnicos?.perfiles?.nombre||'Sin asignar'}</td>
+        <td style="font-size:12.5px;">${o.tipo}</td>
+        <td>${badgeEstado(o.prioridad)}</td>
+        <td>${badgeEstado(o.estado)}</td>
+        <td style="font-size:12px;color:var(--t3);">${fmtFecha(o.fecha_programada)}</td>
+        <td style="font-weight:600;color:var(--t1);">${total > 0 ? fmtMoney(total) : '—'}</td>
+        <td>
+          <div style="display:flex;gap:4px;">
+            ${(user.rol!=='tecnico') ? `<button class="icon-btn" onclick="editarOT('${o.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>` : ''}
+            ${user.rol==='admin' ? `<button class="icon-btn" onclick="eliminarOT('${o.id}')" style="color:var(--red)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H5L4 6"/></svg></button>` : ''}
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  function abrirModal(ot=null) {
+    document.getElementById('f-id').value = '';
+    document.getElementById('f-nombre').value = '';
+    document.getElementById('f-tipo').value = 'Preventiva';
+    document.getElementById('f-prioridad').value = 'Normal';
+    document.getElementById('f-estado').value = 'Abierta';
+    document.getElementById('f-fecha').value = new Date().toISOString().split('T')[0];
+    document.getElementById('f-desc').value = '';
+    document.getElementById('f-cmo').value = 0;
+    document.getElementById('f-crep').value = 0;
+    document.getElementById('f-cotros').value = 0;
+    document.getElementById('modal-ot-titulo').textContent = 'Nueva OT';
+    // Llenar selectores
+    const selCl = document.getElementById('f-cliente');
+    selCl.innerHTML = '<option value="">Seleccionar cliente...</option>' + CLIENTES_LIST.map(c=>`<option value="${c.id}">${c.nombre}</option>`).join('');
+    const selTec = document.getElementById('f-tecnico');
+    selTec.innerHTML = '<option value="">Sin asignar</option>' + TECNICOS_LIST.map(t=>`<option value="${t.id}">${t.perfiles?.nombre||'—'}</option>`).join('');
+    if (ot) {
+      document.getElementById('modal-ot-titulo').textContent = 'Editar OT';
+      document.getElementById('f-id').value = ot.id;
+      document.getElementById('f-nombre').value = ot.nombre||'';
+      document.getElementById('f-tipo').value = ot.tipo||'Preventiva';
+      document.getElementById('f-prioridad').value = ot.prioridad||'Normal';
+      document.getElementById('f-estado').value = ot.estado||'Abierta';
+      document.getElementById('f-fecha').value = ot.fecha_programada||'';
+      document.getElementById('f-desc').value = ot.descripcion||'';
+      document.getElementById('f-cmo').value = ot.costo_mano_obra||0;
+      document.getElementById('f-crep').value = ot.costo_repuestos||0;
+      document.getElementById('f-cotros').value = ot.costo_otros||0;
+      if (ot.cliente_id) selCl.value = ot.cliente_id;
+      if (ot.tecnico_id) selTec.value = ot.tecnico_id;
+    }
+    document.getElementById('modal-ot').classList.add('open');
+  }
+  function cerrarModal() { document.getElementById('modal-ot').classList.remove('open'); }
+  function editarOT(id) { const o = OTS.find(x=>x.id===id); if(o) abrirModal(o); }
+
+  async function guardarOT() {
+    const nombre = document.getElementById('f-nombre').value.trim();
+    if (!nombre) { showToast('El nombre es obligatorio','error'); return; }
+    const db = getDB();
+    const payload = {
+      nombre, tipo: document.getElementById('f-tipo').value,
+      prioridad: document.getElementById('f-prioridad').value,
+      estado: document.getElementById('f-estado').value,
+      cliente_id: document.getElementById('f-cliente').value||null,
+      tecnico_id: document.getElementById('f-tecnico').value||null,
+      fecha_programada: document.getElementById('f-fecha').value||null,
+      descripcion: document.getElementById('f-desc').value||null,
+      costo_mano_obra: parseFloat(document.getElementById('f-cmo').value)||0,
+      costo_repuestos: parseFloat(document.getElementById('f-crep').value)||0,
+      costo_otros: parseFloat(document.getElementById('f-cotros').value)||0,
+      actualizado_en: new Date().toISOString()
+    };
+    const id = document.getElementById('f-id').value;
+    let error;
+    if (id) { ({error} = await db.from('ots').update(payload).eq('id',id)); }
+    else { payload.creado_por = user.id; ({error} = await db.from('ots').insert(payload)); }
+    if (error) { showToast('Error: '+error.message,'error'); return; }
+    showToast(id?'OT actualizada':'OT creada','ok');
+    cerrarModal(); cargarDatos();
+  }
+
+  async function eliminarOT(id) {
+    if (!confirm('¿Eliminar esta OT?')) return;
+    const db = getDB();
+    await db.from('ots').delete().eq('id',id);
+    showToast('OT eliminada','ok'); cargarDatos();
+  }
+  document.getElementById('modal-ot').addEventListener('click',function(e){if(e.target===this)cerrarModal();});
+</script>
+</body></html>

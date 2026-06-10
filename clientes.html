@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RPM Control — Clientes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="shell">
+  <div id="sidebar-container"></div>
+  <div class="main">
+    <div class="topbar">
+      <div class="tb-title">Clientes</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <input type="text" id="buscador" placeholder="Buscar cliente..." style="padding:8px 14px;background:var(--s2);border:1px solid var(--bd);border-radius:20px;color:var(--t1);font-family:var(--fb);font-size:13px;outline:none;width:220px;transition:border-color .2s;" onfocus="this.style.borderColor='var(--red)'" onblur="this.style.borderColor='var(--bd)'">
+        <select id="filtro-estado" style="padding:8px 12px;background:var(--s2);border:1px solid var(--bd);border-radius:20px;color:var(--t2);font-family:var(--fb);font-size:12px;outline:none;">
+          <option value="">Todos</option>
+          <option value="Activo">Activos</option>
+          <option value="Inactivo">Inactivos</option>
+        </select>
+        <button class="btn-p" onclick="abrirModal()" id="btn-nuevo" style="display:none">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nuevo Cliente
+        </button>
+      </div>
+    </div>
+    <div class="content">
+      <div class="card">
+        <div class="card-hd">
+          <div><div class="ctitle">Cartera de Clientes</div><div class="csub" id="total-sub">—</div></div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>RUT</th>
+                <th>Industria</th>
+                <th>Contacto</th>
+                <th>Contrato</th>
+                <th>Estado</th>
+                <th>Alta</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="clientes-tbody">
+              <tr><td colspan="8"><div class="loading-center"><div class="spinner"></div><span>Cargando clientes...</span></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NUEVO/EDITAR CLIENTE -->
+<div class="modal-ov" id="modal-cliente">
+  <div class="modal-box" style="width:680px;">
+    <div class="modal-hd">
+      <div>
+        <div class="modal-title" id="modal-titulo">Nuevo Cliente</div>
+        <div class="modal-sub">Completa la información del cliente</div>
+      </div>
+      <button class="modal-close" onclick="cerrarModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="f-id">
+      <div class="frow">
+        <div class="fg" style="grid-column:1/-1">
+          <label class="fl">Nombre / Razón Social *</label>
+          <input type="text" class="fi" id="f-nombre" placeholder="Ej: Costanera Center">
+        </div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="fl">RUT</label><input type="text" class="fi" id="f-rut" placeholder="12.345.678-9"></div>
+        <div class="fg"><label class="fl">Tipo de Cliente</label>
+          <select class="fs" id="f-tipo">
+            <option>Corporativo</option><option>PyME</option><option>Gobierno</option><option>Residencial</option>
+          </select>
+        </div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="fl">Teléfono</label><input type="text" class="fi" id="f-telefono" placeholder="+56 2 2618 3000"></div>
+        <div class="fg"><label class="fl">Email</label><input type="email" class="fi" id="f-email" placeholder="contacto@empresa.cl"></div>
+      </div>
+      <div class="fg">
+        <label class="fl">Dirección</label>
+        <input type="text" class="fi" id="f-direccion" placeholder="Av. Nombre 1234, Comuna, Ciudad">
+      </div>
+      <div class="fg">
+        <label class="fl">Industria / Rubro</label>
+        <input type="text" class="fi" id="f-industria" placeholder="Ej: Centro Comercial / Oficinas">
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="fl">Responsable Comercial</label><input type="text" class="fi" id="f-responsable" placeholder="Nombre del ejecutivo"></div>
+        <div class="fg"><label class="fl">Condición de Pago</label>
+          <select class="fs" id="f-condicion">
+            <option>30 días</option><option>60 días</option><option>Contado</option><option>Crédito especial</option>
+          </select>
+        </div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="fl">Contrato Estado</label>
+          <select class="fs" id="f-contrato-estado">
+            <option>Vigente</option><option>Vencido</option><option>En negociación</option><option>Sin contrato</option>
+          </select>
+        </div>
+        <div class="fg"><label class="fl">Crédito (días)</label><input type="number" class="fi" id="f-credito" value="30"></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="fl">Contrato Inicio</label><input type="date" class="fi" id="f-contrato-ini"></div>
+        <div class="fg"><label class="fl">Contrato Fin</label><input type="date" class="fi" id="f-contrato-fin"></div>
+      </div>
+      <div class="fg">
+        <label class="fl">Notas / Observaciones</label>
+        <textarea class="fta" id="f-notas" placeholder="Observaciones generales del cliente..."></textarea>
+      </div>
+      <div class="fg">
+        <label class="fl">Estado</label>
+        <select class="fs" id="f-estado"><option>Activo</option><option>Inactivo</option></select>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn-s" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn-p" onclick="guardarCliente()" id="btn-guardar">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        Guardar Cliente
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="auth.js"></script>
+<script src="sidebar.js"></script>
+<script>
+  let CLIENTES = [];
+  const user = requireAuth();
+  if (user) {
+    renderSidebar('clientes');
+    cargarBadges();
+    // Mostrar botón nuevo si tiene permisos
+    if (user.rol === 'admin' || user.rol === 'supervisor') {
+      document.getElementById('btn-nuevo').style.display = 'inline-flex';
+    }
+    cargarClientes();
+  }
+
+  document.getElementById('buscador').addEventListener('input', filtrar);
+  document.getElementById('filtro-estado').addEventListener('change', filtrar);
+
+  async function cargarClientes() {
+    const db = getDB();
+    const { data, error } = await db.from('clientes')
+      .select('*, contactos(nombre, cargo, es_principal)')
+      .order('nombre', { ascending: true });
+    if (error) { showToast('Error cargando clientes', 'error'); return; }
+    CLIENTES = data || [];
+    document.getElementById('total-sub').textContent = `${CLIENTES.length} cliente${CLIENTES.length !== 1 ? 's' : ''} registrados`;
+    renderTabla(CLIENTES);
+  }
+
+  function filtrar() {
+    const txt = document.getElementById('buscador').value.toLowerCase();
+    const est = document.getElementById('filtro-estado').value;
+    const filtrados = CLIENTES.filter(c => {
+      const matchTxt = !txt || c.nombre.toLowerCase().includes(txt) || (c.rut||'').includes(txt) || (c.industria||'').toLowerCase().includes(txt);
+      const matchEst = !est || c.estado === est;
+      return matchTxt && matchEst;
+    });
+    renderTabla(filtrados);
+  }
+
+  function renderTabla(lista) {
+    const tb = document.getElementById('clientes-tbody');
+    if (!lista.length) {
+      tb.innerHTML = `<tr><td colspan="8"><div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><span>Sin clientes encontrados</span></div></td></tr>`;
+      return;
+    }
+    tb.innerHTML = lista.map(c => {
+      const contactoPpal = c.contactos?.find(x => x.es_principal) || c.contactos?.[0];
+      const ini = c.initiales || c.nombre.split(' ').map(x=>x[0]).join('').substring(0,2).toUpperCase();
+      return `
+        <tr onclick="window.location='cliente_detalle.html?id=${c.id}'" style="cursor:pointer;">
+          <td>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,var(--red),var(--orange));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;">${ini}</div>
+              <div>
+                <div style="font-weight:600;color:var(--t1);">${c.nombre}</div>
+                <div style="font-size:11px;color:var(--t3);">${c.email || '—'}</div>
+              </div>
+            </div>
+          </td>
+          <td style="font-size:12.5px;">${c.rut || '—'}</td>
+          <td style="font-size:12.5px;">${c.industria || '—'}</td>
+          <td>
+            ${contactoPpal ? `<div style="font-size:12.5px;color:var(--t1);">${contactoPpal.nombre}</div><div style="font-size:11px;color:var(--t3);">${contactoPpal.cargo||''}</div>` : '<span style="color:var(--t3);">—</span>'}
+          </td>
+          <td>${badgeEstado(c.contrato_estado || 'Sin contrato')}</td>
+          <td>${badgeEstado(c.estado)}</td>
+          <td style="font-size:12px;color:var(--t3);">${fmtFecha(c.fecha_alta)}</td>
+          <td>
+            <div style="display:flex;gap:6px;">
+              ${(user.rol==='admin'||user.rol==='supervisor') ? `
+                <button class="icon-btn" onclick="event.stopPropagation();editarCliente('${c.id}')" title="Editar">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </button>` : ''}
+              ${user.rol==='admin' ? `
+                <button class="icon-btn" onclick="event.stopPropagation();eliminarCliente('${c.id}','${c.nombre}')" title="Eliminar" style="color:var(--red);">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+                </button>` : ''}
+            </div>
+          </td>
+        </tr>`;
+    }).join('');
+  }
+
+  function abrirModal(cliente = null) {
+    document.getElementById('f-id').value = '';
+    document.getElementById('f-nombre').value = '';
+    document.getElementById('f-rut').value = '';
+    document.getElementById('f-tipo').value = 'Corporativo';
+    document.getElementById('f-telefono').value = '';
+    document.getElementById('f-email').value = '';
+    document.getElementById('f-direccion').value = '';
+    document.getElementById('f-industria').value = '';
+    document.getElementById('f-responsable').value = '';
+    document.getElementById('f-condicion').value = '30 días';
+    document.getElementById('f-contrato-estado').value = 'Vigente';
+    document.getElementById('f-credito').value = 30;
+    document.getElementById('f-contrato-ini').value = '';
+    document.getElementById('f-contrato-fin').value = '';
+    document.getElementById('f-notas').value = '';
+    document.getElementById('f-estado').value = 'Activo';
+    document.getElementById('modal-titulo').textContent = 'Nuevo Cliente';
+    if (cliente) {
+      document.getElementById('modal-titulo').textContent = 'Editar Cliente';
+      document.getElementById('f-id').value = cliente.id;
+      document.getElementById('f-nombre').value = cliente.nombre || '';
+      document.getElementById('f-rut').value = cliente.rut || '';
+      document.getElementById('f-tipo').value = cliente.tipo_cliente || 'Corporativo';
+      document.getElementById('f-telefono').value = cliente.telefono || '';
+      document.getElementById('f-email').value = cliente.email || '';
+      document.getElementById('f-direccion').value = cliente.direccion || '';
+      document.getElementById('f-industria').value = cliente.industria || '';
+      document.getElementById('f-responsable').value = cliente.responsable_comercial || '';
+      document.getElementById('f-condicion').value = cliente.condicion_pago || '30 días';
+      document.getElementById('f-contrato-estado').value = cliente.contrato_estado || 'Vigente';
+      document.getElementById('f-credito').value = cliente.credito_dias || 30;
+      document.getElementById('f-contrato-ini').value = cliente.contrato_inicio || '';
+      document.getElementById('f-contrato-fin').value = cliente.contrato_fin || '';
+      document.getElementById('f-notas').value = cliente.notas || '';
+      document.getElementById('f-estado').value = cliente.estado || 'Activo';
+    }
+    document.getElementById('modal-cliente').classList.add('open');
+  }
+
+  function cerrarModal() {
+    document.getElementById('modal-cliente').classList.remove('open');
+  }
+
+  function editarCliente(id) {
+    const c = CLIENTES.find(x => x.id === id);
+    if (c) abrirModal(c);
+  }
+
+  async function guardarCliente() {
+    const nombre = document.getElementById('f-nombre').value.trim();
+    if (!nombre) { showToast('El nombre es obligatorio', 'error'); return; }
+    const btn = document.getElementById('btn-guardar');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Guardando...';
+    const db = getDB();
+    const payload = {
+      nombre,
+      rut: document.getElementById('f-rut').value.trim() || null,
+      tipo_cliente: document.getElementById('f-tipo').value,
+      telefono: document.getElementById('f-telefono').value.trim() || null,
+      email: document.getElementById('f-email').value.trim() || null,
+      direccion: document.getElementById('f-direccion').value.trim() || null,
+      industria: document.getElementById('f-industria').value.trim() || null,
+      responsable_comercial: document.getElementById('f-responsable').value.trim() || null,
+      condicion_pago: document.getElementById('f-condicion').value,
+      contrato_estado: document.getElementById('f-contrato-estado').value,
+      credito_dias: parseInt(document.getElementById('f-credito').value) || 30,
+      contrato_inicio: document.getElementById('f-contrato-ini').value || null,
+      contrato_fin: document.getElementById('f-contrato-fin').value || null,
+      notas: document.getElementById('f-notas').value.trim() || null,
+      estado: document.getElementById('f-estado').value,
+      actualizado_en: new Date().toISOString()
+    };
+    const id = document.getElementById('f-id').value;
+    let error;
+    if (id) {
+      ({ error } = await db.from('clientes').update(payload).eq('id', id));
+    } else {
+      ({ error } = await db.from('clientes').insert(payload));
+    }
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Guardar Cliente';
+    if (error) { showToast('Error: ' + error.message, 'error'); return; }
+    showToast(id ? 'Cliente actualizado' : 'Cliente creado correctamente', 'ok');
+    cerrarModal();
+    cargarClientes();
+  }
+
+  async function eliminarCliente(id, nombre) {
+    if (!confirm(`¿Eliminar al cliente "${nombre}"? Esta acción no se puede deshacer.`)) return;
+    const db = getDB();
+    const { error } = await db.from('clientes').delete().eq('id', id);
+    if (error) { showToast('Error eliminando cliente', 'error'); return; }
+    showToast('Cliente eliminado', 'ok');
+    cargarClientes();
+  }
+
+  document.getElementById('modal-cliente').addEventListener('click', function(e) {
+    if (e.target === this) cerrarModal();
+  });
+</script>
+</body>
+</html>
