@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RPM Control — KPIs</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="shell">
+  <div id="sidebar-container"></div>
+  <div class="main">
+    <div class="topbar">
+      <div class="tb-title">KPIs — Indicadores Clave</div>
+      <div style="display:flex;gap:10px;">
+        <select id="filtro-periodo" class="tb-chip" style="cursor:pointer;border:1px solid var(--bd2);">
+          <option value="mes">Este mes</option>
+          <option value="trimestre">Este trimestre</option>
+          <option value="anio">Este año</option>
+        </select>
+        <div class="tb-chip" style="color:var(--green);">
+          <span style="display:inline-block;width:6px;height:6px;background:var(--green);border-radius:50%;margin-right:4px;"></span>Tiempo real
+        </div>
+      </div>
+    </div>
+    <div class="content">
+
+      <!-- STATS PRINCIPALES -->
+      <div class="g4" style="margin-bottom:22px;" id="kpis-stats">
+        <div class="sc fu" style="--sg:linear-gradient(90deg,#10B981,#34D399);">
+          <div class="sc-glow" style="background:rgba(16,185,129,.15);"></div>
+          <div class="sc-icon" style="color:#10B981;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div class="sc-val" id="kpi-cumplimiento">—</div>
+          <div class="sc-lbl">Cumplimiento OT</div>
+          <div class="sc-delta" id="kpi-cumplimiento-sub" style="color:var(--t3);">Cargando...</div>
+        </div>
+        <div class="sc fu" style="--sg:linear-gradient(90deg,#F59E0B,#FBBF24);">
+          <div class="sc-glow" style="background:rgba(245,158,11,.15);"></div>
+          <div class="sc-icon" style="color:#F59E0B;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+          <div class="sc-val" id="kpi-tiempo">—</div>
+          <div class="sc-lbl">Tiempo Prom. Respuesta</div>
+          <div class="sc-delta" id="kpi-tiempo-sub" style="color:var(--t3);">Cargando...</div>
+        </div>
+        <div class="sc fu" style="--sg:linear-gradient(90deg,#3B82F6,#60A5FA);">
+          <div class="sc-glow" style="background:rgba(59,130,246,.15);"></div>
+          <div class="sc-icon" style="color:#3B82F6;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg></div>
+          <div class="sc-val" id="kpi-total-ots">—</div>
+          <div class="sc-lbl">OT Completadas</div>
+          <div class="sc-delta" id="kpi-total-ots-sub" style="color:var(--t3);">Cargando...</div>
+        </div>
+        <div class="sc fu" style="--sg:linear-gradient(90deg,#E84040,#F97316);">
+          <div class="sc-glow" style="background:rgba(232,64,64,.15);"></div>
+          <div class="sc-icon" style="color:#E84040;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg></div>
+          <div class="sc-val" id="kpi-alertas">—</div>
+          <div class="sc-lbl">Alertas Críticas</div>
+          <div class="sc-delta" id="kpi-alertas-sub" style="color:var(--t3);">Cargando...</div>
+        </div>
+      </div>
+
+      <div class="g2">
+        <!-- CUMPLIMIENTO POR TIPO -->
+        <div class="card fu">
+          <div class="card-hd"><div><div class="ctitle">Cumplimiento por Tipo de OT</div><div class="csub">% de OT completadas vs totales</div></div></div>
+          <div id="barras-tipo" style="padding:8px 0;"></div>
+        </div>
+
+        <!-- OT POR ESTADO -->
+        <div class="card fu">
+          <div class="card-hd"><div><div class="ctitle">Distribución por Estado</div><div class="csub">OT del período seleccionado</div></div></div>
+          <svg id="donut-estados" width="100%" height="200" viewBox="0 0 300 200"></svg>
+        </div>
+      </div>
+
+      <div class="g2 mt20">
+        <!-- TOP CLIENTES POR OTs -->
+        <div class="card fu">
+          <div class="card-hd"><div class="ctitle">Top Clientes por Actividad</div></div>
+          <div id="top-clientes" style="padding:4px 0;"></div>
+        </div>
+
+        <!-- OT POR TÉCNICO -->
+        <div class="card fu">
+          <div class="card-hd"><div class="ctitle">OT por Técnico</div></div>
+          <div id="ots-tecnicos" style="padding:4px 0;"></div>
+        </div>
+      </div>
+
+      <!-- EVOLUCIÓN MENSUAL -->
+      <div class="card mt20 fu">
+        <div class="card-hd">
+          <div><div class="ctitle">Evolución Mensual de OT</div><div class="csub">Últimos 6 meses — completadas vs abiertas</div></div>
+        </div>
+        <svg id="chart-evolucion" width="100%" height="175" viewBox="0 0 860 175" preserveAspectRatio="xMidYMid meet"></svg>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script><script src="auth.js"></script><script src="sidebar.js"></script>
+<script>
+const user = requireAuth();
+if (user) { renderSidebar('kpis'); cargarBadges(); cargarKPIs(); }
+document.getElementById('filtro-periodo').addEventListener('change', cargarKPIs);
+
+async function cargarKPIs() {
+  const db = getDB();
+  const periodo = document.getElementById('filtro-periodo').value;
+  const hoy = new Date();
+  let desde = new Date();
+  if (periodo === 'mes') desde.setDate(1);
+  else if (periodo === 'trimestre') desde.setMonth(hoy.getMonth() - 2, 1);
+  else desde.setMonth(0, 1);
+  desde.setHours(0,0,0,0);
+
+  const { data: ots } = await db.from('ots')
+    .select('*, clientes(nombre), tecnicos(id, perfiles(nombre))')
+    .gte('creado_en', desde.toISOString());
+
+  const { count: alertasCrit } = await db.from('alertas')
+    .select('*', { count: 'exact', head: true })
+    .eq('tipo', 'critica').eq('leida', false);
+
+  const total = ots?.length || 0;
+  const completadas = ots?.filter(o => o.estado === 'Completada').length || 0;
+  const cumplimiento = total > 0 ? Math.round(completadas / total * 100) : 0;
+
+  // KPIs cards
+  document.getElementById('kpi-cumplimiento').textContent = cumplimiento + '%';
+  document.getElementById('kpi-cumplimiento-sub').textContent = `${completadas} de ${total} OT`;
+  document.getElementById('kpi-cumplimiento-sub').className = 'sc-delta ' + (cumplimiento >= 80 ? 'up' : 'down');
+
+  document.getElementById('kpi-tiempo').textContent = '—';
+  document.getElementById('kpi-tiempo-sub').textContent = 'Sin datos suficientes';
+
+  document.getElementById('kpi-total-ots').textContent = completadas;
+  document.getElementById('kpi-total-ots-sub').textContent = `${total} totales en el período`;
+  document.getElementById('kpi-total-ots-sub').className = 'sc-delta up';
+
+  document.getElementById('kpi-alertas').textContent = alertasCrit || 0;
+  document.getElementById('kpi-alertas-sub').textContent = alertasCrit > 0 ? 'Sin revisar' : 'Todo en orden';
+  document.getElementById('kpi-alertas-sub').className = 'sc-delta ' + (alertasCrit > 0 ? 'down' : 'up');
+
+  // Barras por tipo
+  const tipos = ['Preventiva','Correctiva','Inspección','Certificación'];
+  const barrasHtml = tipos.map(t => {
+    const tot = ots?.filter(o => o.tipo === t).length || 0;
+    const comp = ots?.filter(o => o.tipo === t && o.estado === 'Completada').length || 0;
+    const pct = tot > 0 ? Math.round(comp/tot*100) : 0;
+    const color = pct>=90?'linear-gradient(90deg,#10B981,#34D399)':pct>=70?'linear-gradient(90deg,#3B82F6,#60A5FA)':'linear-gradient(90deg,#F59E0B,#FBBF24)';
+    return `<div class="pr" style="margin-bottom:18px;">
+      <span class="pr-lbl" style="flex:0 0 130px;">${t}</span>
+      <div class="pr-bg"><div class="pr-fill" style="width:${pct}%;background:${color};"></div></div>
+      <span class="pr-pct">${pct}%</span>
+    </div><div style="font-size:11px;color:var(--t3);margin:-14px 0 14px 140px;">${comp}/${tot} OT completadas</div>`;
+  }).join('');
+  document.getElementById('barras-tipo').innerHTML = barrasHtml || '<div style="color:var(--t3);font-size:13px;padding:20px 0;text-align:center;">Sin datos en el período</div>';
+
+  // Donut estados
+  const estados = {
+    'Completada': { color: '#10B981', count: 0 },
+    'En Progreso': { color: '#F97316', count: 0 },
+    'Abierta':     { color: '#3B82F6', count: 0 },
+    'Cancelada':   { color: '#E84040', count: 0 }
+  };
+  ots?.forEach(o => { if (estados[o.estado]) estados[o.estado].count++; });
+  renderDonut(total, estados);
+
+  // Top clientes
+  const porCliente = {};
+  ots?.forEach(o => {
+    const n = o.clientes?.nombre || 'Sin cliente';
+    porCliente[n] = (porCliente[n]||0) + 1;
+  });
+  const topCls = Object.entries(porCliente).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const maxCl = topCls[0]?.[1] || 1;
+  document.getElementById('top-clientes').innerHTML = topCls.length
+    ? topCls.map(([n,c]) => `
+      <div class="pr" style="margin-bottom:14px;">
+        <span class="pr-lbl">${n}</span>
+        <div class="pr-bg"><div class="pr-fill" style="width:${c/maxCl*100}%;background:linear-gradient(90deg,#E84040,#F97316);"></div></div>
+        <span class="pr-pct">${c}</span>
+      </div>`).join('')
+    : '<div style="color:var(--t3);font-size:13px;padding:20px 0;text-align:center;">Sin datos</div>';
+
+  // Por técnico
+  const porTec = {};
+  ots?.forEach(o => {
+    const n = o.tecnicos?.perfiles?.nombre || 'Sin asignar';
+    if (!porTec[n]) porTec[n] = { total:0, comp:0 };
+    porTec[n].total++;
+    if (o.estado==='Completada') porTec[n].comp++;
+  });
+  const topTecs = Object.entries(porTec).sort((a,b)=>b[1].total-a[1].total).slice(0,5);
+  document.getElementById('ots-tecnicos').innerHTML = topTecs.length
+    ? topTecs.map(([n,d]) => `
+      <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--bd);">
+        <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--red),var(--orange));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;">${n.split(' ').map(x=>x[0]).join('').substring(0,2).toUpperCase()}</div>
+        <div style="flex:1;"><div style="font-size:13px;font-weight:600;color:var(--t1);">${n}</div><div style="font-size:11.5px;color:var(--t3);">${d.comp} completadas · ${d.total} total</div></div>
+        <span style="font-family:var(--fd);font-size:15px;font-weight:700;color:var(--t1);">${d.total > 0 ? Math.round(d.comp/d.total*100) : 0}%</span>
+      </div>`).join('')
+    : '<div style="color:var(--t3);font-size:13px;padding:20px 0;text-align:center;">Sin datos</div>';
+
+  // Gráfico evolución mensual (últimos 6 meses)
+  renderEvolucion(db);
+}
+
+function renderDonut(total, estados) {
+  const svg = document.getElementById('donut-estados');
+  if (total === 0) { svg.innerHTML = `<text x="150" y="105" text-anchor="middle" font-size="13" fill="rgba(255,255,255,.3)" font-family="DM Sans,sans-serif">Sin datos en el período</text>`; return; }
+  let offset = 0;
+  const r = 68, cx = 110, cy = 100;
+  const circum = 2 * Math.PI * r;
+  let arcos = '';
+  let leyenda = '';
+  let ly = 45;
+  Object.entries(estados).forEach(([nombre, { color, count }]) => {
+    if (!count) return;
+    const dash = (count / total) * circum;
+    arcos += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-width="28" stroke-dasharray="${dash} ${circum - dash}" stroke-dashoffset="${-offset}" transform="rotate(-90 ${cx} ${cy})"/>`;
+    offset += dash;
+    leyenda += `<rect x="210" y="${ly}" width="9" height="9" rx="2" fill="${color}"/><text x="224" y="${ly+9}" font-size="11" fill="rgba(255,255,255,.6)" font-family="DM Sans,sans-serif">${nombre} (${count})</text>`;
+    ly += 22;
+  });
+  svg.innerHTML = `
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#1C2130" stroke-width="28"/>
+    ${arcos}
+    <text x="${cx}" y="${cy-5}" text-anchor="middle" font-size="22" font-weight="800" fill="white" font-family="Syne,sans-serif">${total}</text>
+    <text x="${cx}" y="${cy+13}" text-anchor="middle" font-size="10" fill="rgba(255,255,255,.4)" font-family="DM Sans,sans-serif">TOTAL OT</text>
+    ${leyenda}`;
+}
+
+async function renderEvolucion(db) {
+  const meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  const hoy = new Date();
+  const puntos = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(hoy.getFullYear(), hoy.getMonth() - i, 1);
+    const fin = new Date(hoy.getFullYear(), hoy.getMonth() - i + 1, 0);
+    const { count: comp } = await db.from('ots').select('*',{count:'exact',head:true}).eq('estado','Completada').gte('creado_en', d.toISOString()).lte('creado_en', fin.toISOString());
+    const { count: abier } = await db.from('ots').select('*',{count:'exact',head:true}).neq('estado','Completada').gte('creado_en', d.toISOString()).lte('creado_en', fin.toISOString());
+    puntos.push({ mes: meses[d.getMonth()], comp: comp||0, abier: abier||0 });
+  }
+  const maxVal = Math.max(...puntos.map(p => p.comp + p.abier), 1);
+  const xs = [100,240,380,520,660,800];
+  const H = 150, PAD = 20;
+  const toY = v => PAD + (1 - v/maxVal) * (H - PAD);
+
+  const ptsComp = puntos.map((p,i) => `${xs[i]},${toY(p.comp)}`).join(' ');
+  const ptsAbier = puntos.map((p,i) => `${xs[i]},${toY(p.abier)}`).join(' ');
+
+  let dotsComp = '', dotsAbier = '', labels = '';
+  puntos.forEach((p, i) => {
+    dotsComp  += `<circle cx="${xs[i]}" cy="${toY(p.comp)}" r="${i===5?5:4}" fill="#10B981" ${i===5?'stroke="rgba(16,185,129,.4)" stroke-width="5"':''}/>`;
+    dotsAbier += `<circle cx="${xs[i]}" cy="${toY(p.abier)}" r="${i===5?5:4}" fill="#3B82F6" ${i===5?'stroke="rgba(59,130,246,.4)" stroke-width="5"':''}/>`;
+    labels += `<text x="${xs[i]}" y="170" text-anchor="middle" font-size="11" fill="rgba(255,255,255,.3)" font-family="DM Sans,sans-serif">${p.mes}</text>`;
+  });
+
+  document.getElementById('chart-evolucion').innerHTML = `
+    <defs>
+      <linearGradient id="gComp" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#10B981" stop-opacity=".5"/><stop offset="100%" stop-color="#10B981" stop-opacity="0"/></linearGradient>
+      <linearGradient id="gAbier" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#3B82F6" stop-opacity=".4"/><stop offset="100%" stop-color="#3B82F6" stop-opacity="0"/></linearGradient>
+    </defs>
+    <line x1="60" y1="${toY(maxVal/2)}" x2="840" y2="${toY(maxVal/2)}" stroke="rgba(255,255,255,.05)" stroke-width="1"/>
+    <line x1="60" y1="${H}" x2="840" y2="${H}" stroke="rgba(255,255,255,.07)" stroke-width="1"/>
+    <path d="${puntos.map((p,i)=>`${i===0?'M':'L'}${xs[i]},${toY(p.comp)}`).join(' ')} L${xs[5]},${H} L${xs[0]},${H}Z" fill="url(#gComp)"/>
+    <path d="${puntos.map((p,i)=>`${i===0?'M':'L'}${xs[i]},${toY(p.abier)}`).join(' ')} L${xs[5]},${H} L${xs[0]},${H}Z" fill="url(#gAbier)"/>
+    <polyline points="${ptsComp}" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linejoin="round"/>
+    <polyline points="${ptsAbier}" fill="none" stroke="#3B82F6" stroke-width="2.5" stroke-linejoin="round"/>
+    ${dotsComp}${dotsAbier}${labels}
+    <circle cx="70" cy="15" r="4.5" fill="#10B981"/>
+    <text x="80" y="19" font-size="11" fill="rgba(255,255,255,.55)" font-family="DM Sans,sans-serif">Completadas</text>
+    <circle cx="170" cy="15" r="4.5" fill="#3B82F6"/>
+    <text x="180" y="19" font-size="11" fill="rgba(255,255,255,.55)" font-family="DM Sans,sans-serif">Abiertas/En progreso</text>`;
+}
+</script>
+</body>
+</html>

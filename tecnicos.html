@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RPM Control — Técnicos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="shell">
+  <div id="sidebar-container"></div>
+  <div class="main">
+    <div class="topbar">
+      <div class="tb-title">Técnicos</div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn-p" onclick="abrirModalUsuario()" id="btn-nuevo">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Crear Usuario
+        </button>
+      </div>
+    </div>
+    <div class="content">
+      <div class="g4" style="margin-bottom:22px;">
+        <div class="sc fu" style="--sg:linear-gradient(90deg,#10B981,#34D399);"><div class="sc-icon" style="color:#10B981;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div><div class="sc-val" id="stat-activos">—</div><div class="sc-lbl">Usuarios Activos</div></div>
+        <div class="sc fu" style="--sg:linear-gradient(90deg,#E84040,#F97316);"><div class="sc-icon" style="color:#E84040;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div class="sc-val" id="stat-admins">—</div><div class="sc-lbl">Administradores</div></div>
+        <div class="sc fu" style="--sg:linear-gradient(90deg,#F59E0B,#FBBF24);"><div class="sc-icon" style="color:#F59E0B;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div><div class="sc-val" id="stat-supervisores">—</div><div class="sc-lbl">Supervisores</div></div>
+        <div class="sc fu" style="--sg:linear-gradient(90deg,#3B82F6,#60A5FA);"><div class="sc-icon" style="color:#3B82F6;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div><div class="sc-val" id="stat-tecnicos">—</div><div class="sc-lbl">Técnicos</div></div>
+      </div>
+
+      <div class="card fu">
+        <div class="card-hd"><div><div class="ctitle">Equipo RPM Control</div><div class="csub" id="usuarios-sub">—</div></div></div>
+        <table class="tbl">
+          <thead><tr><th>Usuario</th><th>Rol</th><th>Teléfono</th><th>OT Activas</th><th>OT Completadas</th><th>Estado</th><th></th></tr></thead>
+          <tbody id="usuarios-tbody"><tr><td colspan="7"><div class="loading-center"><div class="spinner"></div></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CREAR USUARIO -->
+<div class="modal-ov" id="modal-usuario">
+  <div class="modal-box" style="width:500px;">
+    <div class="modal-hd"><div><div class="modal-title">Crear Nuevo Usuario</div><div class="modal-sub">El usuario recibirá acceso al sistema</div></div><button class="modal-close" onclick="cerrarModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="fg"><label class="fl">Nombre Completo *</label><input type="text" class="fi" id="fu-nombre" placeholder="Juan Pérez"></div>
+      <div class="fg"><label class="fl">Email *</label><input type="email" class="fi" id="fu-email" placeholder="juan@rpmcontrol.cl"></div>
+      <div class="fg"><label class="fl">Contraseña temporal *</label><input type="password" class="fi" id="fu-pass" placeholder="Mínimo 8 caracteres"></div>
+      <div class="frow">
+        <div class="fg"><label class="fl">Rol</label>
+          <select class="fs" id="fu-rol">
+            <option value="tecnico">Técnico</option>
+            <option value="supervisor">Supervisor</option>
+            <option value="admin">Administrador</option>
+          </select>
+        </div>
+        <div class="fg"><label class="fl">Teléfono</label><input type="text" class="fi" id="fu-telefono" placeholder="+56 9 1234 5678"></div>
+      </div>
+      <div style="background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);border-radius:var(--r);padding:12px 14px;font-size:12.5px;color:var(--blue);margin-top:4px;">
+        ℹ El usuario debe cambiar su contraseña al primer ingreso.
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn-s" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn-p" onclick="crearUsuario()" id="btn-crear">Crear Usuario</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EDITAR PERFIL -->
+<div class="modal-ov" id="modal-perfil">
+  <div class="modal-box" style="width:480px;">
+    <div class="modal-hd"><div><div class="modal-title">Editar Usuario</div></div><button class="modal-close" onclick="cerrarModalPerfil()">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="fp-id">
+      <div class="fg"><label class="fl">Nombre</label><input type="text" class="fi" id="fp-nombre"></div>
+      <div class="frow">
+        <div class="fg"><label class="fl">Rol</label><select class="fs" id="fp-rol"><option value="tecnico">Técnico</option><option value="supervisor">Supervisor</option><option value="admin">Administrador</option></select></div>
+        <div class="fg"><label class="fl">Teléfono</label><input type="text" class="fi" id="fp-telefono"></div>
+      </div>
+      <div class="fg"><label class="fl">Estado</label><select class="fs" id="fp-activo"><option value="true">Activo</option><option value="false">Inactivo</option></select></div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn-s" onclick="cerrarModalPerfil()">Cancelar</button>
+      <button class="btn-p" onclick="guardarPerfil()">Guardar Cambios</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script><script src="auth.js"></script><script src="sidebar.js"></script>
+<script>
+let PERFILES = [];
+const user = requireAuth(['admin']);
+if (user) { renderSidebar('tecnicos'); cargarBadges(); cargarUsuarios(); }
+
+async function cargarUsuarios() {
+  const db = getDB();
+  const { data: perfiles } = await db.from('perfiles').select('*').order('nombre');
+  PERFILES = perfiles || [];
+
+  document.getElementById('stat-activos').textContent = PERFILES.filter(p=>p.activo).length;
+  document.getElementById('stat-admins').textContent = PERFILES.filter(p=>p.rol==='admin').length;
+  document.getElementById('stat-supervisores').textContent = PERFILES.filter(p=>p.rol==='supervisor').length;
+  document.getElementById('stat-tecnicos').textContent = PERFILES.filter(p=>p.rol==='tecnico').length;
+  document.getElementById('usuarios-sub').textContent = `${PERFILES.length} usuarios registrados`;
+
+  // Contar OTs por técnico
+  const { data: ots } = await db.from('ots').select('tecnico_id, estado, tecnicos(perfil_id)');
+
+  const tb = document.getElementById('usuarios-tbody');
+  if (!PERFILES.length) { tb.innerHTML=`<tr><td colspan="7"><div class="empty-state"><span>Sin usuarios</span></div></td></tr>`; return; }
+  const roles = { admin:'Administrador', supervisor:'Supervisor', tecnico:'Técnico' };
+  const colRol = { admin:'#E84040', supervisor:'#F59E0B', tecnico:'#3B82F6' };
+  tb.innerHTML = PERFILES.map(p => {
+    const ini = p.nombre.split(' ').map(x=>x[0]).join('').substring(0,2).toUpperCase();
+    const otsTec = ots?.filter(o=>o.tecnicos?.perfil_id===p.id) || [];
+    const otsActivas = otsTec.filter(o=>['Abierta','En Progreso'].includes(o.estado)).length;
+    const otsComp = otsTec.filter(o=>o.estado==='Completada').length;
+    return `<tr>
+      <td>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,${colRol[p.rol]},${p.rol==='admin'?'#F97316':p.rol==='supervisor'?'#FBBF24':'#60A5FA'});display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;">${ini}</div>
+          <div><div style="font-weight:600;color:var(--t1);">${p.nombre}</div><div style="font-size:11px;color:var(--t3);">${p.email||'—'}</div></div>
+        </div>
+      </td>
+      <td><span class="badge" style="background:${colRol[p.rol]}22;color:${colRol[p.rol]};">${roles[p.rol]}</span></td>
+      <td style="font-size:12.5px;">${p.telefono||'—'}</td>
+      <td style="color:var(--orange);font-weight:600;">${otsActivas}</td>
+      <td style="color:var(--green);font-weight:600;">${otsComp}</td>
+      <td>${p.activo ? '<span class="badge b-ok">Activo</span>' : '<span class="badge b-crit">Inactivo</span>'}</td>
+      <td>
+        <div style="display:flex;gap:4px;">
+          <button class="icon-btn" onclick="editarPerfil('${p.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function abrirModalUsuario(){ document.getElementById('fu-nombre').value='';document.getElementById('fu-email').value='';document.getElementById('fu-pass').value='';document.getElementById('fu-rol').value='tecnico';document.getElementById('fu-telefono').value='';document.getElementById('modal-usuario').classList.add('open'); }
+function cerrarModal(){ document.getElementById('modal-usuario').classList.remove('open'); }
+
+async function crearUsuario() {
+  const nombre=document.getElementById('fu-nombre').value.trim();
+  const email=document.getElementById('fu-email').value.trim();
+  const pass=document.getElementById('fu-pass').value;
+  const rol=document.getElementById('fu-rol').value;
+  const tel=document.getElementById('fu-telefono').value.trim();
+  if(!nombre||!email||!pass){showToast('Nombre, email y contraseña son obligatorios','error');return;}
+  if(pass.length < 8){showToast('La contraseña debe tener al menos 8 caracteres','error');return;}
+  const btn=document.getElementById('btn-crear');
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Creando...';
+  const db=getDB();
+  const {data,error}=await db.auth.admin ? {error:{message:'Use Supabase Dashboard para crear usuarios'}} : {error:{message:'Usa Supabase → Authentication → Users para crear el usuario, luego actualiza su perfil aquí.'}};
+  // Nota: la creación de usuarios por API requiere service_role key
+  // Por seguridad, dirigimos al admin al panel de Supabase
+  btn.disabled=false; btn.innerHTML='Crear Usuario';
+  document.getElementById('modal-usuario').classList.remove('open');
+  showToast('Para crear usuarios: Supabase → Authentication → Users → Invite user. El perfil se crea automáticamente.', 'info');
+}
+
+function editarPerfil(id) {
+  const p=PERFILES.find(x=>x.id===id);if(!p)return;
+  document.getElementById('fp-id').value=p.id;
+  document.getElementById('fp-nombre').value=p.nombre||'';
+  document.getElementById('fp-rol').value=p.rol||'tecnico';
+  document.getElementById('fp-telefono').value=p.telefono||'';
+  document.getElementById('fp-activo').value=p.activo?'true':'false';
+  document.getElementById('modal-perfil').classList.add('open');
+}
+function cerrarModalPerfil(){document.getElementById('modal-perfil').classList.remove('open');}
+async function guardarPerfil(){
+  const id=document.getElementById('fp-id').value;
+  const{error}=await getDB().from('perfiles').update({
+    nombre:document.getElementById('fp-nombre').value,
+    rol:document.getElementById('fp-rol').value,
+    telefono:document.getElementById('fp-telefono').value||null,
+    activo:document.getElementById('fp-activo').value==='true'
+  }).eq('id',id);
+  if(error){showToast('Error: '+error.message,'error');return;}
+  showToast('Perfil actualizado','ok');cerrarModalPerfil();cargarUsuarios();
+}
+['modal-usuario','modal-perfil'].forEach(id=>{ document.getElementById(id).addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');}); });
+</script>
+</body>
+</html>

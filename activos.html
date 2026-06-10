@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RPM Control — Activos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="shell">
+  <div id="sidebar-container"></div>
+  <div class="main">
+    <div class="topbar">
+      <div class="tb-title">Activos</div>
+      <div style="display:flex;gap:10px;">
+        <input type="text" id="buscador" placeholder="Buscar activo..." style="padding:8px 14px;background:var(--s2);border:1px solid var(--bd);border-radius:20px;color:var(--t1);font-family:var(--fb);font-size:13px;outline:none;width:200px;" onfocus="this.style.borderColor='var(--red)'" onblur="this.style.borderColor='var(--bd)'">
+        <select id="filtro-cliente" class="tb-chip" style="cursor:pointer;border:1px solid var(--bd2);"><option value="">Todos los clientes</option></select>
+        <select id="filtro-estado" class="tb-chip" style="cursor:pointer;border:1px solid var(--bd2);"><option value="">Todos los estados</option><option value="Operacional">Operacional</option><option value="En Revisión">En Revisión</option><option value="Fuera de Servicio">Fuera de Servicio</option></select>
+        <button class="btn-p" onclick="abrirModal()" id="btn-nuevo" style="display:none">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Nuevo Activo
+        </button>
+      </div>
+    </div>
+    <div class="content">
+
+      <!-- STATS -->
+      <div class="g4" style="margin-bottom:22px;">
+        <div class="sc fu" style="--sg:linear-gradient(90deg,#10B981,#34D399);"><div class="sc-icon" style="color:#10B981;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></div><div class="sc-val" id="stat-operacional">—</div><div class="sc-lbl">Operacionales</div></div>
+        <div class="sc fu" style="--sg:linear-gradient(90deg,#F59E0B,#FBBF24);"><div class="sc-icon" style="color:#F59E0B;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><div class="sc-val" id="stat-revision">—</div><div class="sc-lbl">En Revisión</div></div>
+        <div class="sc fu" style="--sg:linear-gradient(90deg,#E84040,#F97316);"><div class="sc-icon" style="color:#E84040;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg></div><div class="sc-val" id="stat-vencidos">—</div><div class="sc-lbl">Mantención Vencida</div></div>
+        <div class="sc fu" style="--sg:linear-gradient(90deg,#3B82F6,#60A5FA);"><div class="sc-icon" style="color:#3B82F6;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div><div class="sc-val" id="stat-total">—</div><div class="sc-lbl">Total Activos</div></div>
+      </div>
+
+      <div class="card fu">
+        <div class="card-hd"><div><div class="ctitle">Inventario de Activos</div><div class="csub" id="activos-sub">—</div></div></div>
+        <div style="overflow-x:auto;">
+          <table class="tbl">
+            <thead><tr><th>Activo</th><th>Cliente</th><th>Sistema</th><th>Modelo / Serie</th><th>Ubicación</th><th>Últ. Mantención</th><th>Próx. Mantención</th><th>Estado</th><th></th></tr></thead>
+            <tbody id="activos-tbody"><tr><td colspan="9"><div class="loading-center"><div class="spinner"></div></div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-ov" id="modal-activo">
+  <div class="modal-box" style="width:620px;">
+    <div class="modal-hd"><div><div class="modal-title" id="modal-titulo">Nuevo Activo</div></div><button class="modal-close" onclick="cerrarModal()">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="f-id">
+      <div class="frow">
+        <div class="fg"><label class="fl">Cliente *</label><select class="fs" id="f-cliente"><option value="">Seleccionar...</option></select></div>
+        <div class="fg"><label class="fl">Sistema</label><select class="fs" id="f-sistema"><option value="">Seleccionar sistema...</option></select></div>
+      </div>
+      <div class="fg"><label class="fl">Nombre del Activo *</label><input type="text" class="fi" id="f-nombre" placeholder="Ej: Panel de Control Central"></div>
+      <div class="frow">
+        <div class="fg"><label class="fl">Modelo</label><input type="text" class="fi" id="f-modelo" placeholder="Modelo del equipo"></div>
+        <div class="fg"><label class="fl">N° de Serie</label><input type="text" class="fi" id="f-serie" placeholder="Número de serie"></div>
+      </div>
+      <div class="fg"><label class="fl">Ubicación</label><input type="text" class="fi" id="f-ubicacion" placeholder="Ej: Piso 3, Sala de máquinas"></div>
+      <div class="frow">
+        <div class="fg"><label class="fl">Último Mantenimiento</label><input type="date" class="fi" id="f-ult-mant"></div>
+        <div class="fg"><label class="fl">Próximo Mantenimiento</label><input type="date" class="fi" id="f-prox-mant"></div>
+      </div>
+      <div class="fg"><label class="fl">Estado</label><select class="fs" id="f-estado"><option>Operacional</option><option>En Revisión</option><option>Fuera de Servicio</option></select></div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn-s" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn-p" onclick="guardarActivo()" id="btn-guardar">Guardar Activo</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script><script src="auth.js"></script><script src="sidebar.js"></script>
+<script>
+let ACTIVOS = [], CLIENTES_LIST = [];
+const user = requireAuth();
+if (user) {
+  renderSidebar('activos'); cargarBadges();
+  if (user.rol !== 'tecnico') document.getElementById('btn-nuevo').style.display = 'inline-flex';
+  cargarDatos();
+}
+document.getElementById('buscador').addEventListener('input', filtrar);
+document.getElementById('filtro-cliente').addEventListener('change', filtrar);
+document.getElementById('filtro-estado').addEventListener('change', filtrar);
+
+// Pre-cargar cliente desde URL
+const params = new URLSearchParams(window.location.search);
+const clienteParam = params.get('cliente');
+
+async function cargarDatos() {
+  const db = getDB();
+  const { data: cls } = await db.from('clientes').select('id,nombre').eq('estado','Activo').order('nombre');
+  CLIENTES_LIST = cls || [];
+  const sel = document.getElementById('filtro-cliente');
+  CLIENTES_LIST.forEach(c => { const o = document.createElement('option'); o.value=c.id; o.textContent=c.nombre; sel.appendChild(o); });
+  if (clienteParam) sel.value = clienteParam;
+  await cargarActivos();
+}
+
+async function cargarActivos() {
+  const db = getDB();
+  let q = db.from('activos').select('*, clientes(nombre), sistemas(nombre)').order('nombre');
+  const cFiltro = document.getElementById('filtro-cliente').value;
+  if (cFiltro) q = q.eq('cliente_id', cFiltro);
+  const { data } = await q;
+  ACTIVOS = data || [];
+
+  const hoy = new Date().toISOString().split('T')[0];
+  const operacionales = ACTIVOS.filter(a => a.estado === 'Operacional').length;
+  const revision = ACTIVOS.filter(a => a.estado === 'En Revisión').length;
+  const vencidos = ACTIVOS.filter(a => a.proximo_mantenimiento && a.proximo_mantenimiento < hoy).length;
+  document.getElementById('stat-operacional').textContent = operacionales;
+  document.getElementById('stat-revision').textContent = revision;
+  document.getElementById('stat-vencidos').textContent = vencidos;
+  document.getElementById('stat-total').textContent = ACTIVOS.length;
+  document.getElementById('activos-sub').textContent = `${ACTIVOS.length} activos registrados`;
+  filtrar();
+}
+
+function filtrar() {
+  const txt = document.getElementById('buscador').value.toLowerCase();
+  const est = document.getElementById('filtro-estado').value;
+  const cli = document.getElementById('filtro-cliente').value;
+  const hoy = new Date().toISOString().split('T')[0];
+  const f = ACTIVOS.filter(a =>
+    (!txt || a.nombre.toLowerCase().includes(txt) || (a.modelo||'').toLowerCase().includes(txt)) &&
+    (!est || a.estado === est) &&
+    (!cli || a.cliente_id === cli)
+  );
+  renderTabla(f, hoy);
+}
+
+function renderTabla(lista, hoy) {
+  const tb = document.getElementById('activos-tbody');
+  if (!lista.length) { tb.innerHTML = `<tr><td colspan="9"><div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span>Sin activos encontrados</span></div></td></tr>`; return; }
+  tb.innerHTML = lista.map(a => {
+    const vencido = a.proximo_mantenimiento && a.proximo_mantenimiento < hoy;
+    const proximo = a.proximo_mantenimiento && !vencido && new Date(a.proximo_mantenimiento) <= new Date(Date.now() + 7*24*60*60*1000);
+    return `<tr>
+      <td><div style="font-weight:600;color:var(--t1);">${a.nombre}</div></td>
+      <td style="font-size:12.5px;">${a.clientes?.nombre||'—'}</td>
+      <td style="font-size:12.5px;">${a.sistemas?.nombre||'—'}</td>
+      <td style="font-size:12px;color:var(--t3);">${a.modelo||'—'}${a.serie?' · '+a.serie:''}</td>
+      <td style="font-size:12.5px;">${a.ubicacion||'—'}</td>
+      <td style="font-size:12px;color:var(--t3);">${fmtFecha(a.ultimo_mantenimiento)}</td>
+      <td style="font-size:12px;color:${vencido?'var(--red)':proximo?'var(--yellow)':'var(--t3)'};">${fmtFecha(a.proximo_mantenimiento)}${vencido?' ⚠':''}</td>
+      <td>${badgeEstado(a.estado)}</td>
+      <td>
+        <div style="display:flex;gap:4px;">
+          ${user.rol!=='tecnico'?`<button class="icon-btn" onclick="editarActivo('${a.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>`:''}
+          ${user.rol==='admin'?`<button class="icon-btn" onclick="eliminarActivo('${a.id}')" style="color:var(--red)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H5L4 6"/></svg></button>`:''}
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function abrirModal(activo=null) {
+  document.getElementById('f-id').value=''; document.getElementById('f-nombre').value='';
+  document.getElementById('f-modelo').value=''; document.getElementById('f-serie').value='';
+  document.getElementById('f-ubicacion').value=''; document.getElementById('f-ult-mant').value='';
+  document.getElementById('f-prox-mant').value=''; document.getElementById('f-estado').value='Operacional';
+  document.getElementById('modal-titulo').textContent='Nuevo Activo';
+  // Clientes
+  const selCl = document.getElementById('f-cliente');
+  selCl.innerHTML = '<option value="">Seleccionar cliente...</option>' + CLIENTES_LIST.map(c=>`<option value="${c.id}">${c.nombre}</option>`).join('');
+  document.getElementById('f-sistema').innerHTML = '<option value="">Seleccionar sistema...</option>';
+  if (activo) {
+    document.getElementById('modal-titulo').textContent='Editar Activo';
+    document.getElementById('f-id').value=activo.id;
+    document.getElementById('f-nombre').value=activo.nombre||'';
+    document.getElementById('f-modelo').value=activo.modelo||'';
+    document.getElementById('f-serie').value=activo.serie||'';
+    document.getElementById('f-ubicacion').value=activo.ubicacion||'';
+    document.getElementById('f-ult-mant').value=activo.ultimo_mantenimiento||'';
+    document.getElementById('f-prox-mant').value=activo.proximo_mantenimiento||'';
+    document.getElementById('f-estado').value=activo.estado||'Operacional';
+    if (activo.cliente_id) { selCl.value=activo.cliente_id; await cargarSistemas(activo.cliente_id, activo.sistema_id); }
+  }
+  document.getElementById('modal-activo').classList.add('open');
+}
+
+async function cargarSistemas(clienteId, sistemaSeleccionado=null) {
+  const {data} = await getDB().from('sistemas').select('id,nombre').eq('cliente_id',clienteId);
+  const sel=document.getElementById('f-sistema');
+  sel.innerHTML='<option value="">Sin sistema</option>'+(data||[]).map(s=>`<option value="${s.id}">${s.nombre}</option>`).join('');
+  if(sistemaSeleccionado) sel.value=sistemaSeleccionado;
+}
+document.getElementById('f-cliente').addEventListener('change',function(){if(this.value)cargarSistemas(this.value);});
+
+function cerrarModal(){document.getElementById('modal-activo').classList.remove('open');}
+function editarActivo(id){const a=ACTIVOS.find(x=>x.id===id);if(a)abrirModal(a);}
+
+async function guardarActivo(){
+  const nombre=document.getElementById('f-nombre').value.trim();
+  if(!nombre){showToast('El nombre es obligatorio','error');return;}
+  const db=getDB();
+  const payload={
+    nombre,cliente_id:document.getElementById('f-cliente').value||null,
+    sistema_id:document.getElementById('f-sistema').value||null,
+    modelo:document.getElementById('f-modelo').value||null,
+    serie:document.getElementById('f-serie').value||null,
+    ubicacion:document.getElementById('f-ubicacion').value||null,
+    ultimo_mantenimiento:document.getElementById('f-ult-mant').value||null,
+    proximo_mantenimiento:document.getElementById('f-prox-mant').value||null,
+    estado:document.getElementById('f-estado').value
+  };
+  const id=document.getElementById('f-id').value;
+  const {error}=id?await db.from('activos').update(payload).eq('id',id):await db.from('activos').insert(payload);
+  if(error){showToast('Error: '+error.message,'error');return;}
+  showToast(id?'Activo actualizado':'Activo creado','ok');
+  cerrarModal();cargarActivos();
+}
+async function eliminarActivo(id){
+  if(!confirm('¿Eliminar este activo?'))return;
+  await getDB().from('activos').delete().eq('id',id);
+  showToast('Activo eliminado','ok');cargarActivos();
+}
+document.getElementById('modal-activo').addEventListener('click',function(e){if(e.target===this)cerrarModal();});
+</script>
+</body>
+</html>
