@@ -24,11 +24,17 @@ function setUsuarioActual(data) {
   localStorage.setItem('rpm_user', JSON.stringify(data));
 }
 
-function cerrarSesion() {
-  localStorage.removeItem('rpm_user');
-  const db = getDB();
-  db.auth.signOut();
-  window.location.href = 'index.html';
+async function cerrarSesion() {
+  try {
+    localStorage.removeItem('rpm_user');
+    sessionStorage.clear();
+    const db = getDB();
+    await db.auth.signOut();
+  } catch(e) {
+    console.warn('signOut error:', e);
+  } finally {
+    window.location.replace('index.html');
+  }
 }
 
 // Proteger página — redirige a login si no hay sesión
